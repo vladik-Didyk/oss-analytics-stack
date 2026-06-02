@@ -12,7 +12,7 @@ const HELP = `${header("analytics-stack")} v${VERSION}
 ${c.bold("Usage:")}
 
   npx @vladik-didyk/analytics-stack ${c.cyan("<command>")}
-  npx github:vladik-Didyk/analytics-stack ${c.cyan("<command>")}
+  npx analytics-stack ${c.cyan("<command>")}
 
 ${c.bold("Commands:")}
 
@@ -23,10 +23,10 @@ ${c.bold("Commands:")}
 ${c.bold("Examples:")}
 
   # Inside your project directory:
-  npx github:vladik-Didyk/analytics-stack init
+  npx analytics-stack init
 
   # Verify a project after running init:
-  npx github:vladik-Didyk/analytics-stack verify
+  npx analytics-stack verify
 
 ${c.dim("Docs: https://github.com/vladik-Didyk/analytics-stack#readme")}
 `;
