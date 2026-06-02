@@ -5,7 +5,7 @@
 From the **root of your existing project**:
 
 ```bash
-npx github:vladik-Didyk/analytics-stack init
+npx analytics-stack init
 ```
 
 The CLI will:
@@ -89,7 +89,7 @@ Open the dev URL in an **incognito window** (ad blockers in your normal browser 
 ## 6. Verify the installation
 
 ```bash
-npx github:vladik-Didyk/analytics-stack verify
+npx analytics-stack verify
 ```
 
 Reports any missing files, missing env vars, or broken expectations.
