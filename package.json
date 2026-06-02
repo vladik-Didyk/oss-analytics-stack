@@ -1,5 +1,5 @@
 {
-  "name": "@vladik-didyk/analytics-stack",
+  "name": "analytics-stack",
   "version": "0.1.0",
   "description": "Drop-in consent-gated analytics for any website. Installs Google Analytics 4, Microsoft Clarity, and PostHog with one command. Privacy-first: nothing loads until the visitor accepts.",
   "type": "module",
@@ -39,12 +39,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vladik-Didyk/analytics-stack.git"
+    "url": "https://github.com/vladik-Didyk/oss-analytics-stack.git"
   },
   "bugs": {
-    "url": "https://github.com/vladik-Didyk/analytics-stack/issues"
+    "url": "https://github.com/vladik-Didyk/oss-analytics-stack/issues"
   },
-  "homepage": "https://github.com/vladik-Didyk/analytics-stack#readme",
+  "homepage": "https://github.com/vladik-Didyk/oss-analytics-stack#readme",
   "engines": {
     "node": ">=18"
   },
