@@ -1,10 +1,13 @@
 # analytics-stack
 
+[![npm version](https://img.shields.io/npm/v/analytics-stack?color=cb3837&logo=npm)](https://www.npmjs.com/package/analytics-stack) [![npm downloads](https://img.shields.io/npm/dt/analytics-stack?color=cb3837&logo=npm)](https://www.npmjs.com/package/analytics-stack) [![license](https://img.shields.io/npm/l/analytics-stack?color=blue)](./LICENSE)
+
+
 > One command, three free analytics tools, full consent gating.
 > **GA4 + Microsoft Clarity + PostHog** wired into any modern website.
 
 ```bash
-npx github:vladik-Didyk/analytics-stack init
+npx analytics-stack init
 ```
 
 Drops a privacy-first analytics setup into your project in under 30 seconds. Nothing loads until the visitor accepts the cookie banner. Each tool is independent — omit an env var to disable it.
@@ -36,7 +39,7 @@ Inside any existing project:
 
 ```bash
 # 1. Run the scaffolder
-npx github:vladik-Didyk/analytics-stack init
+npx analytics-stack init
 
 # 2. Sign up for the tools you want and grab the IDs:
 #    - GA4:     https://analytics.google.com/
@@ -166,13 +169,13 @@ Then trigger a fresh deploy so the bundle picks them up.
 
 ```bash
 # Install into the current project
-npx github:vladik-Didyk/analytics-stack init
+npx analytics-stack init
 
 # Verify an existing installation
-npx github:vladik-Didyk/analytics-stack verify
+npx analytics-stack verify
 
 # Show help
-npx github:vladik-Didyk/analytics-stack help
+npx analytics-stack help
 ```
 
 ---
@@ -182,7 +185,7 @@ npx github:vladik-Didyk/analytics-stack help
 After installing and adding IDs, run:
 
 ```bash
-npx github:vladik-Didyk/analytics-stack verify
+npx analytics-stack verify
 ```
 
 It checks:
