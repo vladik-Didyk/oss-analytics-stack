@@ -1,6 +1,6 @@
 {
   "name": "analytics-stack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Drop-in consent-gated analytics for any website. Installs Google Analytics 4, Microsoft Clarity, and PostHog with one command. Privacy-first: nothing loads until the visitor accepts.",
   "type": "module",
   "bin": {
