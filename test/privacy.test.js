@@ -71,3 +71,18 @@ test("upsertManagedBlock appends a fresh block when markers are broken", () => {
   assert.match(content, /orphaned, no end marker/); // never deletes user content
   assert.ok(content.trimEnd().endsWith(BLOCK_END)); // fresh block is last
 });
+
+test("upsertManagedBlock with empty policyText does not produce leading newlines", () => {
+  const block = `${BLOCK_BEGIN}\nsection\n${BLOCK_END}`;
+  const { content, action } = upsertManagedBlock("", block);
+  assert.equal(action, "appended");
+  assert.ok(!content.startsWith("\n"), "should not start with newline");
+  assert.match(content, /^<!-- BEGIN/);
+});
+
+test("stripToolBlocks with empty Set removes all tool blocks", () => {
+  const out = stripToolBlocks(SAMPLE, new Set([]));
+  assert.doesNotMatch(out, /Google Analytics|Microsoft Clarity|PostHog/);
+  assert.match(out, /intro text/);
+  assert.doesNotMatch(out, /\n{3,}/);
+});

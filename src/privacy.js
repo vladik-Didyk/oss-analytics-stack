@@ -38,6 +38,7 @@ function escapeRe(s) {
 // Replace the managed block if present, append if absent. Never touches text
 // outside the markers. Broken markers (BEGIN without END or vice versa) get a
 // fresh block appended instead — repairing would risk eating user content.
+// If two marker pairs somehow exist, only the first is replaced (intentional).
 export function upsertManagedBlock(policyText, block) {
   const hasBegin = policyText.includes(BLOCK_BEGIN);
   const hasEnd = policyText.includes(BLOCK_END);
@@ -45,6 +46,7 @@ export function upsertManagedBlock(policyText, block) {
     const re = new RegExp(`${escapeRe(BLOCK_BEGIN)}[\\s\\S]*?${escapeRe(BLOCK_END)}`);
     return { content: policyText.replace(re, block.trim()), action: "replaced" };
   }
-  const appended = policyText.trimEnd() + "\n\n" + block.trim() + "\n";
+  const body = policyText.trimEnd();
+  const appended = (body ? body + "\n\n" : "") + block.trim() + "\n";
   return { content: appended, action: hasBegin || hasEnd ? "appended-broken" : "appended" };
 }
