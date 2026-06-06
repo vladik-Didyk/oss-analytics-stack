@@ -23,6 +23,7 @@ import {
   getFrameworks,
   getFrameworkById,
 } from "../detect.js";
+import { patchPrivacyPolicy } from "../privacy.js";
 
 export async function initCommand() {
   const cwd = process.cwd();
@@ -85,6 +86,14 @@ export async function initCommand() {
       },
       {
         type: "toggle",
+        name: "privacy",
+        message: "Add analytics disclosures to your privacy policy?",
+        initial: true,
+        active: "yes",
+        inactive: "no",
+      },
+      {
+        type: "toggle",
         name: "installDeps",
         message: "Install posthog-js now?",
         initial: true,
@@ -111,6 +120,9 @@ export async function initCommand() {
   process.stdout.write(`  Tools:      ${[...tools].join(", ")}\n`);
   process.stdout.write(`  TypeScript: ${ts ? "yes" : "no"}\n`);
   process.stdout.write(`  Out dir:    ${c.cyan(outDir)}\n`);
+  if (answers.privacy) {
+    process.stdout.write(`  Privacy:    PRIVACY.md (create or update)\n`);
+  }
   blank();
 
   const { confirm } = await prompts({
@@ -172,7 +184,15 @@ export async function initCommand() {
   // 6. Patch .gitignore (ensure .env is ignored)
   patchGitignore(cwd);
 
-  // 7. Install posthog-js (only if PostHog selected)
+  // 7. Privacy policy disclosures
+  if (answers.privacy) {
+    const privacyResult = patchPrivacyPolicy(cwd, tools);
+    if (privacyResult) {
+      step(privacyResult.created ? "Created" : "Updated", relPath(cwd, privacyResult.path));
+    }
+  }
+
+  // 8. Install posthog-js (only if PostHog selected)
   if (tools.has("posthog") && answers.installDeps) {
     blank();
     info(`Installing ${c.cyan("posthog-js")}...`);
@@ -180,12 +200,12 @@ export async function initCommand() {
     step("Installed", "posthog-js");
   }
 
-  // 8. Print integration snippet
+  // 9. Print integration snippet
   blank();
   printSnippet(framework);
 
-  // 9. Print next steps
-  printNextSteps(framework, tools);
+  // 10. Print next steps
+  printNextSteps(framework, tools, answers.privacy);
 }
 
 function relPath(cwd, abs) {
@@ -240,7 +260,7 @@ function printSnippet(framework) {
   process.stdout.write("\n");
 }
 
-function printNextSteps(framework, tools) {
+function printNextSteps(framework, tools, privacy) {
   const prefix = envPrefix(framework);
   blank();
   process.stdout.write(`${c.bold(c.green("✨ Done!"))} ${c.dim("Next steps:")}\n\n`);
@@ -274,6 +294,13 @@ function printNextSteps(framework, tools) {
     `  ${c.bold(`${n++}.`)} Mount the components in your app entry. ${c.dim("(snippet above)")}\n`
   );
   blank();
+
+  if (privacy) {
+    process.stdout.write(
+      `  ${c.bold(`${n++}.`)} Review ${c.cyan("PRIVACY.md")} — replace the ${c.cyan("[Your Company]")} placeholders and link it from your site footer.\n`
+    );
+    blank();
+  }
 
   process.stdout.write(
     `  ${c.bold(`${n++}.`)} Test in incognito → click Accept → check DevTools → Network for the analytics requests.\n`
