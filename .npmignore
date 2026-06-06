@@ -9,3 +9,5 @@ node_modules/
 test/
 tests/
 *.test.js
+scripts/
+docs/superpowers/
