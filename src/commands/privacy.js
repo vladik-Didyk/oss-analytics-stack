@@ -7,13 +7,14 @@ import { patchPrivacyPolicy, detectToolsFromEnvExample } from "../privacy.js";
 
 export async function privacyCommand() {
   const cwd = process.cwd();
-  process.stdout.write(`\n${header("analytics-stack")} ${c.dim("privacy")}\n\n`);
+  process.stdout.write(`\n${header("analytics-stack")} ${c.dim("v0.1.0 — privacy")}\n\n`);
   info(`Working directory: ${c.cyan(cwd)}`);
 
   let framework = detectFramework(cwd);
   if (framework) {
     info(`Detected framework: ${c.bold(framework.label)} ${c.dim(`(${framework.id})`)}`);
   } else {
+    blank();
     const { frameworkId } = await prompts(
       {
         type: "select",
