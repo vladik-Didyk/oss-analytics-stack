@@ -76,6 +76,19 @@ function tryWrite(path, content) {
   }
 }
 
+// Detect previously-installed tools from .env.example (same keys verify checks).
+// Returns a Set of tool ids, or null when nothing was detected.
+export function detectToolsFromEnvExample(cwd, framework) {
+  const content = readText(join(cwd, ".env.example"));
+  if (!content) return null;
+  const prefix = envPrefix(framework);
+  const tools = new Set();
+  if (content.includes(`${prefix}GA4_ID`)) tools.add("ga4");
+  if (content.includes(`${prefix}CLARITY_ID`)) tools.add("clarity");
+  if (content.includes(`${prefix}POSTHOG_KEY`)) tools.add("posthog");
+  return tools.size > 0 ? tools : null;
+}
+
 // Create or update the project's privacy policy. Returns { path, created },
 // or null when the existing file could not be read (warned, skipped).
 export function patchPrivacyPolicy(cwd, tools) {

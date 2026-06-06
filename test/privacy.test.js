@@ -5,7 +5,8 @@ import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripToolBlocks, upsertManagedBlock, BLOCK_BEGIN, BLOCK_END } from "../src/privacy.js";
-import { buildPrivacySection, findPolicyFile, patchPrivacyPolicy } from "../src/privacy.js";
+import { buildPrivacySection, findPolicyFile, patchPrivacyPolicy, detectToolsFromEnvExample } from "../src/privacy.js";
+import { getFrameworkById } from "../src/detect.js";
 
 const SAMPLE = `## Analytics & Cookies
 
@@ -152,4 +153,24 @@ test("patchPrivacyPolicy re-run replaces the block (idempotent, tools updated)",
   assert.match(content, /PostHog/);
   assert.equal(content.split(BLOCK_BEGIN).length, 2); // exactly one block
   assert.equal(content.split(BLOCK_END).length, 2);
+});
+
+test("detectToolsFromEnvExample reads prefixed keys from .env.example", () => {
+  const dir = tmp();
+  writeFileSync(
+    join(dir, ".env.example"),
+    "VITE_GA4_ID=G-XXXX\nVITE_POSTHOG_KEY=phc_xxx\nVITE_POSTHOG_HOST=https://us.i.posthog.com\n"
+  );
+  const tools = detectToolsFromEnvExample(dir, getFrameworkById("vite-react"));
+  assert.deepEqual([...tools].sort(), ["ga4", "posthog"]);
+});
+
+test("detectToolsFromEnvExample returns null when .env.example is missing", () => {
+  assert.equal(detectToolsFromEnvExample(tmp(), getFrameworkById("vite-react")), null);
+});
+
+test("detectToolsFromEnvExample returns null when no keys match", () => {
+  const dir = tmp();
+  writeFileSync(join(dir, ".env.example"), "OTHER_VAR=1\n");
+  assert.equal(detectToolsFromEnvExample(dir, getFrameworkById("vite-react")), null);
 });
