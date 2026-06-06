@@ -15,6 +15,7 @@ The CLI will:
 3. Ask which analytics tools you want
 4. Ask if you want TypeScript
 5. Ask where to put the files (default `src/`)
+6. Ask whether to add analytics disclosures to your privacy policy (default yes)
 
 You can hit Enter for every default if it auto-detected correctly.
 
@@ -109,6 +110,18 @@ Then trigger a fresh deploy. After deploy:
 3. Check GA4 Realtime — you should see yourself
 4. Check PostHog Live Events
 5. Open Clarity dashboard the next day for session recordings (Clarity has ~30 min lag for first session)
+
+## Privacy policy disclosures
+
+`init` offers to write per-tool privacy disclosures into your privacy policy
+(creating `PRIVACY.md` if you don't have one). Installed analytics-stack before
+this feature existed? Add the disclosures without touching any other file:
+
+```bash
+npx analytics-stack privacy
+```
+
+See [privacy policy generation](./privacy-policy.md) for the full contract.
 
 ## Troubleshooting
 

@@ -28,6 +28,7 @@ Plus:
 - 🪶 **Lazy-loaded PostHog SDK** — kept out of your initial bundle
 - 🎨 **Themed cookie banner** — dark/light mode, accessible, responsive
 - 🧭 **SPA route tracking** — page views fire on client-side navigation
+- 📜 **Privacy-policy ready** — writes per-tool disclosure sections into your privacy policy (creates `PRIVACY.md` if missing)
 - 🔌 **Framework-aware** — auto-detects Vite, Next.js, React Router v7, Remix, Astro
 - 📦 **Zero runtime dependencies** — only adds `posthog-js` to your project
 
@@ -59,6 +60,7 @@ That's it. The scaffolder takes care of:
 - ✅ Creating `src/components/consent/CookieConsent.{jsx,tsx}` + CSS
 - ✅ Patching `.env.example` with the right env var prefix for your framework
 - ✅ Patching `.gitignore` to protect `.env`
+- ✅ Adding analytics disclosures to your privacy policy (`PRIVACY.md`)
 - ✅ Running `pnpm add posthog-js` (or `npm`/`yarn`/`bun`)
 - ✅ Printing the integration snippet for your framework
 
@@ -174,6 +176,9 @@ npx analytics-stack init
 # Verify an existing installation
 npx analytics-stack verify
 
+# Add/update privacy policy disclosures (PRIVACY.md)
+npx analytics-stack privacy
+
 # Show help
 npx analytics-stack help
 ```
@@ -196,6 +201,7 @@ It checks:
 - ✔ `.env.example` contains the right env var names
 - ✔ `.gitignore` protects `.env`
 - ✔ `posthog-js` is installed (if PostHog selected)
+- ⚠ Warns if your privacy policy is missing analytics disclosures (soft warning — never fails the run)
 
 For **end-to-end** verification (real network requests):
 
@@ -204,6 +210,32 @@ For **end-to-end** verification (real network requests):
 3. Click **Accept** on the banner
 4. DevTools → Network → filter by `google-analytics|clarity|posthog`
 5. You should see one 204 from each tool you enabled
+
+## Privacy policy disclosures
+
+GA4, Clarity, and PostHog all require you to disclose data collection to your
+visitors (e.g. GA4's "User Data Collection Acknowledgement"). The scaffolder
+handles the boilerplate:
+
+- `init` offers to write per-tool disclosure sections into your privacy policy
+  (default: yes). If no policy exists, it creates `PRIVACY.md` from a skeleton
+  with `[Your Company]` placeholders for you to fill in.
+- Already installed before this feature existed? Add the disclosures without
+  touching any other file:
+
+```bash
+npx analytics-stack privacy
+```
+
+- Everything generated lives between `<!-- BEGIN analytics-stack -->` and
+  `<!-- END analytics-stack -->` markers. Re-running replaces only that block —
+  your own text is never touched. Changed your tool selection? Re-run and the
+  block updates to match.
+
+> ⚠️ The generated text is a starting point, **not legal advice**. Review it
+> with a qualified professional before publishing.
+
+Details: [docs/privacy-policy.md](docs/privacy-policy.md)
 
 ---
 
