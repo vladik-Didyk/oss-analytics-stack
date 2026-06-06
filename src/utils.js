@@ -59,7 +59,11 @@ export function readJson(path) {
 
 export function readText(path) {
   if (!existsSync(path)) return null;
-  return readFileSync(path, "utf8");
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    return null;
+  }
 }
 
 export function writeText(path, content) {

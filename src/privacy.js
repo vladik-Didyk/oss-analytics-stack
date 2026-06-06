@@ -44,7 +44,7 @@ export function upsertManagedBlock(policyText, block) {
   const hasEnd = policyText.includes(BLOCK_END);
   if (hasBegin && hasEnd) {
     const re = new RegExp(`${escapeRe(BLOCK_BEGIN)}[\\s\\S]*?${escapeRe(BLOCK_END)}`);
-    return { content: policyText.replace(re, block.trim()), action: "replaced" };
+    return { content: policyText.replace(re, () => block.trim()), action: "replaced" };
   }
   const body = policyText.trimEnd();
   const appended = (body ? body + "\n\n" : "") + block.trim() + "\n";
@@ -66,6 +66,16 @@ export function findPolicyFile(cwd) {
   return null;
 }
 
+function tryWrite(path, content) {
+  try {
+    writeText(path, content);
+    return true;
+  } catch (err) {
+    warn(`Could not write ${path} — skipping privacy policy update. (${err.message})`);
+    return false;
+  }
+}
+
 // Create or update the project's privacy policy. Returns { path, created },
 // or null when the existing file could not be read (warned, skipped).
 export function patchPrivacyPolicy(cwd, tools) {
@@ -75,9 +85,9 @@ export function patchPrivacyPolicy(cwd, tools) {
   if (!existingPath) {
     const skeleton = readFileSync(join(TEMPLATES, "privacy", "privacy-skeleton.md"), "utf8");
     const today = new Date().toISOString().slice(0, 10);
-    const content = skeleton.replace("__DATE__", today).replace("__ANALYTICS_SECTION__", block);
+    const content = skeleton.replace("__DATE__", () => today).replace("__ANALYTICS_SECTION__", () => block);
     const path = join(cwd, "PRIVACY.md");
-    writeText(path, content);
+    if (!tryWrite(path, content)) return null;
     return { path, created: true };
   }
 
@@ -92,6 +102,6 @@ export function patchPrivacyPolicy(cwd, tools) {
       "Found a broken analytics-stack marker block in your privacy policy — appended a fresh block instead. Please remove the old one manually."
     );
   }
-  writeText(existingPath, content);
+  if (!tryWrite(existingPath, content)) return null;
   return { path: existingPath, created: false };
 }
