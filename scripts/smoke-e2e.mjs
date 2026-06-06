@@ -1,6 +1,6 @@
 // End-to-end smoke: init + privacy + verify in a temp project.
 // Run from the repo root: node scripts/smoke-e2e.mjs
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -8,6 +8,12 @@ import prompts from "prompts";
 
 const REPO = process.cwd();
 const CLI = join(REPO, "bin", "cli.js");
+
+if (!existsSync(join(REPO, "src", "commands", "init.js"))) {
+  console.error(`✖ Run this script from the repo root (got: ${REPO})`);
+  process.exit(1);
+}
+
 const tmp = mkdtempSync(join(tmpdir(), "astack-smoke-"));
 
 writeFileSync(
@@ -21,45 +27,53 @@ function fail(msg) {
   process.exit(1);
 }
 
-// --- 1. init with privacy enabled, GA4 + Clarity only, no dep install ---
-prompts.inject([
-  "vite-react",       // framework
-  ["ga4", "clarity"], // tools
-  false,              // typescript
-  "src",              // outDir
-  true,               // privacy
-  false,              // installDeps
-  true,               // confirm
-]);
-const { initCommand } = await import(join(REPO, "src", "commands", "init.js"));
-await initCommand([]);
+try {
+  // --- 1. init with privacy enabled, GA4 + Clarity only, no dep install ---
+  prompts.inject([
+    "vite-react",       // framework
+    ["ga4", "clarity"], // tools
+    false,              // typescript
+    "src",              // outDir
+    true,               // privacy
+    false,              // installDeps
+    true,               // confirm
+  ]);
+  const { initCommand } = await import(join(REPO, "src", "commands", "init.js"));
+  await initCommand([]);
 
-let policy = readFileSync(join(tmp, "PRIVACY.md"), "utf8");
-if (!policy.includes("Google Analytics 4")) fail("init: GA4 section missing");
-if (!policy.includes("Microsoft Clarity")) fail("init: Clarity section missing");
-if (policy.includes("PostHog")) fail("init: PostHog section should be absent");
-if (!policy.includes("[Your Company]")) fail("init: skeleton placeholders missing");
+  let policy = readFileSync(join(tmp, "PRIVACY.md"), "utf8");
+  if (!policy.includes("Google Analytics 4")) fail("init: GA4 section missing");
+  if (!policy.includes("Microsoft Clarity")) fail("init: Clarity section missing");
+  if (policy.includes("PostHog")) fail("init: PostHog section should be absent");
+  if (!policy.includes("[Your Company]")) fail("init: skeleton placeholders missing");
 
-// --- 2. privacy re-run with all three tools — block must be replaced, once ---
-prompts.inject([["ga4", "clarity", "posthog"]]);
-const { privacyCommand } = await import(join(REPO, "src", "commands", "privacy.js"));
-await privacyCommand([]);
+  // --- 2. privacy re-run with all three tools — block must be replaced, once ---
+  prompts.inject([["ga4", "clarity", "posthog"]]);
+  const { privacyCommand } = await import(join(REPO, "src", "commands", "privacy.js"));
+  await privacyCommand([]);
 
-policy = readFileSync(join(tmp, "PRIVACY.md"), "utf8");
-if (!policy.includes("PostHog")) fail("privacy: block not updated with PostHog");
-if (policy.split("<!-- BEGIN analytics-stack -->").length !== 2) fail("privacy: duplicate managed blocks");
+  policy = readFileSync(join(tmp, "PRIVACY.md"), "utf8");
+  if (!policy.includes("PostHog")) fail("privacy: block not updated with PostHog");
+  if (!policy.includes("Google Analytics 4")) fail("privacy: GA4 lost after re-run");
+  if (!policy.includes("Microsoft Clarity")) fail("privacy: Clarity lost after re-run");
+  if (!policy.includes("<!-- BEGIN analytics-stack -->")) fail("privacy: managed block missing");
+  if (policy.split("<!-- BEGIN analytics-stack -->").length !== 2) fail("privacy: duplicate managed blocks");
 
-// --- 3. verify — no privacy warning when the block exists ---
-let res = spawnSync(process.execPath, [CLI, "verify"], { cwd: tmp, encoding: "utf8" });
-let out = res.stdout + res.stderr;
-if (out.includes("No privacy policy found")) fail("verify: warned despite policy existing");
-if (out.includes("has no analytics disclosures")) fail("verify: warned despite block existing");
+  // --- 3. verify — no privacy warning when the block exists ---
+  let res = spawnSync(process.execPath, [CLI, "verify"], { cwd: tmp, encoding: "utf8" });
+  let out = res.stdout + res.stderr;
+  if (out.includes("No privacy policy found")) fail("verify: warned despite policy existing");
+  if (out.includes("has no analytics disclosures")) fail("verify: warned despite block existing");
 
-// --- 4. verify — warning appears when the policy is gone ---
-rmSync(join(tmp, "PRIVACY.md"));
-res = spawnSync(process.execPath, [CLI, "verify"], { cwd: tmp, encoding: "utf8" });
-out = res.stdout + res.stderr;
-if (!out.includes("No privacy policy found")) fail("verify: missing-policy warning not shown");
+  // --- 4. verify — warning appears when the policy is gone ---
+  rmSync(join(tmp, "PRIVACY.md"));
+  res = spawnSync(process.execPath, [CLI, "verify"], { cwd: tmp, encoding: "utf8" });
+  out = res.stdout + res.stderr;
+  if (!out.includes("No privacy policy found")) fail("verify: missing-policy warning not shown");
 
-console.log(`\n✨ smoke OK (${tmp})`);
-rmSync(tmp, { recursive: true, force: true });
+  console.log(`\n✨ smoke OK (${tmp})`);
+  rmSync(tmp, { recursive: true, force: true });
+} catch (err) {
+  console.error(`✖ SMOKE CRASH (dir kept: ${tmp})\n`, err);
+  process.exit(1);
+}

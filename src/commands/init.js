@@ -44,6 +44,8 @@ export async function initCommand() {
   blank();
 
   // 2. Prompts
+  // Prompt order is positionally coupled to scripts/smoke-e2e.mjs inject[].
+  // If you add, remove, or reorder a prompt here, update the inject array too.
   const answers = await prompts(
     [
       {
