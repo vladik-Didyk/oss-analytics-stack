@@ -21,8 +21,8 @@ device/browser information using cookies (`_ga`, `_ga_*`).
 ### Microsoft Clarity (Microsoft Corporation)
 
 We use Microsoft Clarity to understand how visitors interact with our pages. It
-records anonymized session replays, heatmaps, and click/scroll behavior, and
-collects device/browser information.
+records session replays, heatmaps, and click/scroll behavior, and collects
+device/browser information.
 
 - Data is collected **only after you accept analytics cookies**.
 - Privacy statement: https://privacy.microsoft.com/privacystatement
