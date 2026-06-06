@@ -10,7 +10,7 @@
     "bin",
     "src",
     "templates",
-    "docs",
+    "docs/*.md",
     "README.md",
     "LICENSE"
   ],
