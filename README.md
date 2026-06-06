@@ -164,6 +164,7 @@ Then trigger a fresh deploy so the bundle picks them up.
 - 📖 [PostHog setup](docs/posthog-setup.md) — US vs EU cloud, API keys, projects
 - 📖 [Consent gating explained](docs/consent-mode.md) — why we don't use Google Consent Mode v2
 - 📖 [Installation walkthrough](docs/installation.md) — full step-by-step
+- 📖 [Privacy policy generation](docs/privacy-policy.md) — disclosure text and the marker-block contract
 
 ---
 
@@ -211,26 +212,29 @@ For **end-to-end** verification (real network requests):
 4. DevTools → Network → filter by `google-analytics|clarity|posthog`
 5. You should see one 204 from each tool you enabled
 
+---
+
 ## Privacy policy disclosures
 
-GA4, Clarity, and PostHog all require you to disclose data collection to your
+GA4, Clarity, and PostHog all expect you to disclose data collection to your
 visitors (e.g. GA4's "User Data Collection Acknowledgement"). The scaffolder
-handles the boilerplate:
+handles the boilerplate.
 
-- `init` offers to write per-tool disclosure sections into your privacy policy
-  (default: yes). If no policy exists, it creates `PRIVACY.md` from a skeleton
-  with `[Your Company]` placeholders for you to fill in.
-- Already installed before this feature existed? Add the disclosures without
-  touching any other file:
+`init` offers to write per-tool disclosure sections into your privacy policy
+(default: yes). If no policy exists, it creates `PRIVACY.md` from a skeleton
+with `[Your Company]` placeholders for you to fill in.
+
+Already installed before this feature existed? Add the disclosures without
+touching any other file:
 
 ```bash
 npx analytics-stack privacy
 ```
 
-- Everything generated lives between `<!-- BEGIN analytics-stack -->` and
-  `<!-- END analytics-stack -->` markers. Re-running replaces only that block —
-  your own text is never touched. Changed your tool selection? Re-run and the
-  block updates to match.
+Everything generated lives between `<!-- BEGIN analytics-stack -->` and
+`<!-- END analytics-stack -->` markers. Re-running replaces only that block —
+your own text is never touched. Changed your tool selection? Re-run and the
+block updates to match.
 
 > ⚠️ The generated text is a starting point, **not legal advice**. Review it
 > with a qualified professional before publishing.

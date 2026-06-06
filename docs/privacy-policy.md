@@ -1,8 +1,9 @@
 # Privacy policy generation
 
-Analytics vendors require you to disclose data collection to your visitors.
-GA4's terms include a "User Data Collection Acknowledgement"; Clarity and
-PostHog have equivalent expectations. `analytics-stack` generates the matching
+You're expected to disclose data collection to your visitors. GA4's terms
+include an explicit "User Data Collection Acknowledgement"; for Clarity and
+PostHog the obligation comes from privacy law (GDPR, CCPA, and similar,
+depending on your jurisdiction). `analytics-stack` generates the matching
 disclosure text for exactly the tools you installed.
 
 > ⚠️ **Not legal advice.** The generated text is a starting point. Review it
