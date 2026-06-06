@@ -28,7 +28,7 @@ import { patchPrivacyPolicy } from "../privacy.js";
 export async function initCommand() {
   const cwd = process.cwd();
 
-  process.stdout.write(`\n${header("analytics-stack")} ${c.dim("v0.1.0 — init")}\n\n`);
+  process.stdout.write(`\n${header("analytics-stack")} ${c.dim("v0.2.0 — init")}\n\n`);
   info(`Working directory: ${c.cyan(cwd)}`);
 
   // 1. Framework detection

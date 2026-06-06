@@ -7,7 +7,7 @@ import { findPolicyFile, BLOCK_BEGIN } from "../privacy.js";
 
 export async function verifyCommand() {
   const cwd = process.cwd();
-  process.stdout.write(`\n${header("analytics-stack")} ${c.dim("v0.1.0 — verify")}\n\n`);
+  process.stdout.write(`\n${header("analytics-stack")} ${c.dim("v0.2.0 — verify")}\n\n`);
 
   const framework = detectFramework(cwd);
   if (!framework) {

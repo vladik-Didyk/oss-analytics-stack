@@ -2,7 +2,7 @@
 import { initCommand } from "./commands/init.js";
 import { c, header } from "./utils.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 
 const HELP = `${header("analytics-stack")} v${VERSION}
 
