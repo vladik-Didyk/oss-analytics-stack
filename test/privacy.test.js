@@ -174,3 +174,14 @@ test("detectToolsFromEnvExample returns null when no keys match", () => {
   writeFileSync(join(dir, ".env.example"), "OTHER_VAR=1\n");
   assert.equal(detectToolsFromEnvExample(dir, getFrameworkById("vite-react")), null);
 });
+
+test("detectToolsFromEnvExample reads unprefixed keys (remix)", () => {
+  const dir = tmp();
+  writeFileSync(join(dir, ".env.example"), "GA4_ID=G-XXXX\nCLARITY_ID=abc\n");
+  const tools = detectToolsFromEnvExample(dir, getFrameworkById("remix"));
+  assert.deepEqual([...tools].sort(), ["clarity", "ga4"]);
+});
+
+test("detectToolsFromEnvExample returns null for a null framework", () => {
+  assert.equal(detectToolsFromEnvExample(tmp(), null), null);
+});

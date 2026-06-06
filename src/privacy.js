@@ -78,7 +78,10 @@ function tryWrite(path, content) {
 
 // Detect previously-installed tools from .env.example (same keys verify checks).
 // Returns a Set of tool ids, or null when nothing was detected.
+// Heuristic: substring match — commented-out vars count as present, which is
+// acceptable for pre-selecting a multiselect.
 export function detectToolsFromEnvExample(cwd, framework) {
+  if (!framework) return null;
   const content = readText(join(cwd, ".env.example"));
   if (!content) return null;
   const prefix = envPrefix(framework);
