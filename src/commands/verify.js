@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { c, header, info, warn, error, blank, readText, readJson } from "../utils.js";
 import { detectFramework, envPrefix } from "../detect.js";
-import { findPolicyFile } from "../privacy.js";
+import { findPolicyFile, BLOCK_BEGIN } from "../privacy.js";
 
 export async function verifyCommand() {
   const cwd = process.cwd();
@@ -93,7 +93,7 @@ export async function verifyCommand() {
   const policyPath = findPolicyFile(cwd);
   if (!policyPath) {
     warn(`No privacy policy found — run ${c.cyan("npx analytics-stack privacy")} to generate one.`);
-  } else if (!(readText(policyPath) || "").includes("<!-- BEGIN analytics-stack -->")) {
+  } else if (!(readText(policyPath) || "").includes(BLOCK_BEGIN)) {
     warn(
       `${relPath(cwd, policyPath)} has no analytics disclosures — run ${c.cyan("npx analytics-stack privacy")} to add them.`
     );
