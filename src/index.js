@@ -18,6 +18,7 @@ ${c.bold("Commands:")}
 
   ${c.cyan("init")}     Scaffold the analytics stack into the current project
   ${c.cyan("verify")}   Check that an existing installation is wired correctly
+  ${c.cyan("privacy")}  Add/update privacy policy disclosures (PRIVACY.md)
   ${c.cyan("help")}     Show this help
 
 ${c.bold("Examples:")}
@@ -51,6 +52,11 @@ export async function run(argv) {
     case "verify": {
       const { verifyCommand } = await import("./commands/verify.js");
       await verifyCommand(rest);
+      return;
+    }
+    case "privacy": {
+      const { privacyCommand } = await import("./commands/privacy.js");
+      await privacyCommand(rest);
       return;
     }
     default:
