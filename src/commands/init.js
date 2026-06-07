@@ -128,7 +128,7 @@ export async function initCommand() {
   if (answers.privacy === "yes") {
     process.stdout.write(`  Privacy:    PRIVACY.md (create or update)\n`);
   } else if (answers.privacy === "unsure") {
-    process.stdout.write(`  Privacy:    deferred (note saved for your AI assistant)\n`);
+    process.stdout.write(`  Privacy:    deferred (will save a note for your AI assistant)\n`);
   }
   blank();
 
@@ -198,10 +198,13 @@ export async function initCommand() {
       step(privacyResult.created ? "Created" : "Updated", relPath(cwd, privacyResult.path));
     }
   } else if (answers.privacy === "unsure") {
+    const toolLabels = { ga4: "GA4", clarity: "Microsoft Clarity", posthog: "PostHog" };
+    const names = [...tools].map((t) => toolLabels[t] || t);
+    const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
     blank();
-    info("No problem — skipping the privacy policy for now. In short: GA4, Clarity and");
-    info("PostHog expect you to tell visitors what data is collected. This tool can");
-    info("generate that text for you, without touching anything you wrote yourself.");
+    info("No problem — skipping the privacy policy for now.");
+    info(`In short: sites using ${list} are expected to disclose data collection to visitors.`);
+    info("This tool can generate that text for you — without touching anything you wrote yourself.");
     for (const notedPath of savePendingPrivacyNote(cwd, tools)) {
       step("Saved", `${relPath(cwd, notedPath)} — note for your AI assistant`);
     }
