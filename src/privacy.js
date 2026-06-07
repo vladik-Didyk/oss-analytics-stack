@@ -143,6 +143,7 @@ export const MEMORY_FILENAMES = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"];
 // Save the "user is not sure about the privacy policy" note into every existing
 // AI memory file — or a new AGENTS.md when the project has none.
 // Returns the paths actually written.
+// `tools` must be a Set or array of tool ids (e.g. new Set(["ga4"])).
 export function savePendingPrivacyNote(cwd, tools) {
   const template = readFileSync(join(TEMPLATES, "privacy", "pending-note.md"), "utf8");
   const note = template.replace("__TOOLS__", () => [...tools].join(", ")).trim();
@@ -173,7 +174,7 @@ export function clearPendingPrivacyNote(cwd) {
         unlinkSync(path);
         cleared.push(path);
       } catch {
-        // Leave the trimmed file in place if deletion fails.
+        // Deletion failed — write the whitespace-only remainder instead.
         if (tryWrite(path, content)) cleared.push(path);
       }
     } else if (tryWrite(path, content)) {
