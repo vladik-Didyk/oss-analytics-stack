@@ -220,3 +220,12 @@ test("removeManagedBlock is a no-op when markers are absent or broken", () => {
   const broken = `text\n${B}\norphan\n`;
   assert.deepEqual(removeManagedBlock(broken, B, E), { content: broken, removed: false });
 });
+
+test("removeManagedBlock block-at-start does not produce a leading newline", () => {
+  const B = "<!-- BEGIN custom -->";
+  const E = "<!-- END custom -->";
+  const text = `${B}\nnote\n${E}\n`;
+  const { content, removed } = removeManagedBlock(text, B, E);
+  assert.equal(removed, true);
+  assert.ok(!content.startsWith("\n"), "should not start with newline");
+});

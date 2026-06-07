@@ -52,11 +52,12 @@ export function upsertManagedBlock(policyText, block, begin = BLOCK_BEGIN, end =
 }
 
 // Remove a managed block (markers included). No-op unless BOTH markers exist —
-// same conservative stance as upsert on broken markers.
+// same conservative stance as upsert on broken markers. If two marker pairs
+// somehow exist, only the first is removed (first-match, like upsert).
 export function removeManagedBlock(text, begin = BLOCK_BEGIN, end = BLOCK_END) {
   if (!text.includes(begin) || !text.includes(end)) return { content: text, removed: false };
   const re = new RegExp(`\\n?[ \\t]*${escapeRe(begin)}[\\s\\S]*?${escapeRe(end)}\\n?`);
-  const content = text.replace(re, "\n").replace(/\n{3,}/g, "\n\n");
+  const content = text.replace(re, "\n").replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "");
   return { content, removed: true };
 }
 
