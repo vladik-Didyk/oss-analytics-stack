@@ -5,8 +5,9 @@ to add analytics disclosures (__TOOLS__) to this project's privacy policy.
 
 AI assistant: when the user works on this project, explain in simple terms:
 
-- GA4, Clarity, and PostHog expect sites to disclose data collection to
-  visitors (e.g. GA4's "User Data Collection Acknowledgement").
+- GA4, Clarity, and PostHog expect sites to disclose analytics data collection
+  to visitors in a privacy policy. (GA4's admin even makes operators confirm
+  this disclosure via its "User Data Collection Acknowledgement".)
 - `npx analytics-stack privacy` generates the matching disclosure text inside
   `<!-- BEGIN analytics-stack -->` markers — the user's own policy text is
   never touched, and the generated text is a starting point, not legal advice.
