@@ -1,5 +1,5 @@
 // Privacy policy generation — shared by `init` and the `privacy` command.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { TEMPLATES, readText, writeText, warn } from "./utils.js";
 import { envPrefix } from "./detect.js";
@@ -114,6 +114,7 @@ export function patchPrivacyPolicy(cwd, tools) {
     const content = skeleton.replace("__DATE__", () => today).replace("__ANALYTICS_SECTION__", () => block);
     const path = join(cwd, "PRIVACY.md");
     if (!tryWrite(path, content)) return null;
+    clearPendingPrivacyNote(cwd);
     return { path, created: true };
   }
 
@@ -129,5 +130,55 @@ export function patchPrivacyPolicy(cwd, tools) {
     );
   }
   if (!tryWrite(existingPath, content)) return null;
+  clearPendingPrivacyNote(cwd);
   return { path: existingPath, created: false };
+}
+
+export const NOTE_BEGIN = "<!-- BEGIN analytics-stack:pending-privacy -->";
+export const NOTE_END = "<!-- END analytics-stack:pending-privacy -->";
+
+// AI memory files we know how to write a pending-decision note into.
+export const MEMORY_FILENAMES = ["CLAUDE.md", "AGENTS.md", "GEMINI.md"];
+
+// Save the "user is not sure about the privacy policy" note into every existing
+// AI memory file — or a new AGENTS.md when the project has none.
+// Returns the paths actually written.
+export function savePendingPrivacyNote(cwd, tools) {
+  const template = readFileSync(join(TEMPLATES, "privacy", "pending-note.md"), "utf8");
+  const note = template.replace("__TOOLS__", () => [...tools].join(", ")).trim();
+  const block = `${NOTE_BEGIN}\n${note}\n${NOTE_END}`;
+  const existing = MEMORY_FILENAMES.map((name) => join(cwd, name)).filter((p) => existsSync(p));
+  const targets = existing.length > 0 ? existing : [join(cwd, "AGENTS.md")];
+  const written = [];
+  for (const path of targets) {
+    const current = readText(path) || "";
+    const { content } = upsertManagedBlock(current, block, NOTE_BEGIN, NOTE_END);
+    if (tryWrite(path, content)) written.push(path);
+  }
+  return written;
+}
+
+// Remove the pending note from all memory files. Files we created solely for
+// the note (nothing left but whitespace) are deleted. Returns cleared paths.
+export function clearPendingPrivacyNote(cwd) {
+  const cleared = [];
+  for (const name of MEMORY_FILENAMES) {
+    const path = join(cwd, name);
+    const current = readText(path);
+    if (current === null || !current.includes(NOTE_BEGIN)) continue;
+    const { content, removed } = removeManagedBlock(current, NOTE_BEGIN, NOTE_END);
+    if (!removed) continue;
+    if (content.trim() === "") {
+      try {
+        unlinkSync(path);
+        cleared.push(path);
+      } catch {
+        // Leave the trimmed file in place if deletion fails.
+        if (tryWrite(path, content)) cleared.push(path);
+      }
+    } else if (tryWrite(path, content)) {
+      cleared.push(path);
+    }
+  }
+  return cleared;
 }

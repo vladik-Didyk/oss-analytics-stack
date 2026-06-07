@@ -1,11 +1,12 @@
 // Tests for src/privacy.js — run with `npm test` (node --test).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripToolBlocks, upsertManagedBlock, removeManagedBlock, BLOCK_BEGIN, BLOCK_END } from "../src/privacy.js";
 import { buildPrivacySection, findPolicyFile, patchPrivacyPolicy, detectToolsFromEnvExample } from "../src/privacy.js";
+import { savePendingPrivacyNote, clearPendingPrivacyNote, NOTE_BEGIN } from "../src/privacy.js";
 import { getFrameworkById } from "../src/detect.js";
 
 const SAMPLE = `## Analytics & Cookies
@@ -228,4 +229,67 @@ test("removeManagedBlock block-at-start does not produce a leading newline", () 
   const { content, removed } = removeManagedBlock(text, B, E);
   assert.equal(removed, true);
   assert.ok(!content.startsWith("\n"), "should not start with newline");
+});
+
+test("savePendingPrivacyNote creates AGENTS.md when no memory file exists", () => {
+  const dir = tmp();
+  const written = savePendingPrivacyNote(dir, new Set(["ga4", "posthog"]));
+  assert.deepEqual(written, [join(dir, "AGENTS.md")]);
+  const content = readFileSync(join(dir, "AGENTS.md"), "utf8");
+  assert.match(content, /Pending decision: privacy policy/);
+  assert.match(content, /ga4, posthog/);
+  assert.doesNotMatch(content, /__TOOLS__/);
+  assert.ok(content.includes(NOTE_BEGIN));
+});
+
+test("savePendingPrivacyNote writes to every existing memory file", () => {
+  const dir = tmp();
+  writeFileSync(join(dir, "CLAUDE.md"), "# My project notes\n");
+  writeFileSync(join(dir, "AGENTS.md"), "# Agent rules\n");
+  const written = savePendingPrivacyNote(dir, new Set(["clarity"]));
+  assert.equal(written.length, 2);
+  for (const name of ["CLAUDE.md", "AGENTS.md"]) {
+    const content = readFileSync(join(dir, name), "utf8");
+    assert.ok(content.includes(NOTE_BEGIN), `${name} missing note`);
+    assert.match(content, /^# /); // user content preserved at top
+  }
+});
+
+test("savePendingPrivacyNote is idempotent", () => {
+  const dir = tmp();
+  savePendingPrivacyNote(dir, new Set(["ga4"]));
+  savePendingPrivacyNote(dir, new Set(["ga4", "clarity"]));
+  const content = readFileSync(join(dir, "AGENTS.md"), "utf8");
+  assert.equal(content.split(NOTE_BEGIN).length, 2); // exactly one block
+  assert.match(content, /ga4, clarity/); // updated tools
+});
+
+test("clearPendingPrivacyNote trims files with user content, deletes note-only files", () => {
+  const dir = tmp();
+  writeFileSync(join(dir, "CLAUDE.md"), "# Keep me\n");
+  savePendingPrivacyNote(dir, new Set(["ga4"])); // writes into CLAUDE.md only
+  const dir2 = tmp();
+  savePendingPrivacyNote(dir2, new Set(["ga4"])); // creates note-only AGENTS.md
+
+  const cleared1 = clearPendingPrivacyNote(dir);
+  assert.deepEqual(cleared1, [join(dir, "CLAUDE.md")]);
+  const kept = readFileSync(join(dir, "CLAUDE.md"), "utf8");
+  assert.match(kept, /# Keep me/);
+  assert.ok(!kept.includes(NOTE_BEGIN));
+
+  const cleared2 = clearPendingPrivacyNote(dir2);
+  assert.deepEqual(cleared2, [join(dir2, "AGENTS.md")]);
+  assert.equal(existsSync(join(dir2, "AGENTS.md")), false); // note-only file deleted
+});
+
+test("clearPendingPrivacyNote returns [] when nothing to clear", () => {
+  assert.deepEqual(clearPendingPrivacyNote(tmp()), []);
+});
+
+test("patchPrivacyPolicy auto-clears a pending note", () => {
+  const dir = tmp();
+  savePendingPrivacyNote(dir, new Set(["ga4"]));
+  patchPrivacyPolicy(dir, new Set(["ga4"]));
+  assert.equal(existsSync(join(dir, "AGENTS.md")), false);
+  assert.equal(existsSync(join(dir, "PRIVACY.md")), true);
 });
