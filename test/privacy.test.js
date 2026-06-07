@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { stripToolBlocks, upsertManagedBlock, BLOCK_BEGIN, BLOCK_END } from "../src/privacy.js";
+import { stripToolBlocks, upsertManagedBlock, removeManagedBlock, BLOCK_BEGIN, BLOCK_END } from "../src/privacy.js";
 import { buildPrivacySection, findPolicyFile, patchPrivacyPolicy, detectToolsFromEnvExample } from "../src/privacy.js";
 import { getFrameworkById } from "../src/detect.js";
 
@@ -184,4 +184,39 @@ test("detectToolsFromEnvExample reads unprefixed keys (remix)", () => {
 
 test("detectToolsFromEnvExample returns null for a null framework", () => {
   assert.equal(detectToolsFromEnvExample(tmp(), null), null);
+});
+
+test("upsertManagedBlock honors custom markers", () => {
+  const B = "<!-- BEGIN custom -->";
+  const E = "<!-- END custom -->";
+  const block = `${B}\nold note\n${E}`;
+  const first = upsertManagedBlock("# File\n\ntext\n", block, B, E);
+  assert.equal(first.action, "appended");
+  assert.match(first.content, /old note/);
+  const second = upsertManagedBlock(first.content, `${B}\nnew note\n${E}`, B, E);
+  assert.equal(second.action, "replaced");
+  assert.match(second.content, /new note/);
+  assert.doesNotMatch(second.content, /old note/);
+  assert.equal(second.content.split(B).length, 2);
+});
+
+test("removeManagedBlock removes block and markers, preserves surroundings", () => {
+  const B = "<!-- BEGIN custom -->";
+  const E = "<!-- END custom -->";
+  const text = `# Title\n\nbefore\n\n${B}\nthe note\n${E}\n\nafter\n`;
+  const { content, removed } = removeManagedBlock(text, B, E);
+  assert.equal(removed, true);
+  assert.doesNotMatch(content, /the note/);
+  assert.doesNotMatch(content, /custom/);
+  assert.match(content, /before/);
+  assert.match(content, /after/);
+  assert.doesNotMatch(content, /\n{3,}/);
+});
+
+test("removeManagedBlock is a no-op when markers are absent or broken", () => {
+  const B = "<!-- BEGIN custom -->";
+  const E = "<!-- END custom -->";
+  assert.deepEqual(removeManagedBlock("plain text\n", B, E), { content: "plain text\n", removed: false });
+  const broken = `text\n${B}\norphan\n`;
+  assert.deepEqual(removeManagedBlock(broken, B, E), { content: broken, removed: false });
 });

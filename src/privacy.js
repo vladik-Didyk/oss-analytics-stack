@@ -39,16 +39,25 @@ function escapeRe(s) {
 // outside the markers. Broken markers (BEGIN without END or vice versa) get a
 // fresh block appended instead — repairing would risk eating user content.
 // If two marker pairs somehow exist, only the first is replaced (intentional).
-export function upsertManagedBlock(policyText, block) {
-  const hasBegin = policyText.includes(BLOCK_BEGIN);
-  const hasEnd = policyText.includes(BLOCK_END);
+export function upsertManagedBlock(policyText, block, begin = BLOCK_BEGIN, end = BLOCK_END) {
+  const hasBegin = policyText.includes(begin);
+  const hasEnd = policyText.includes(end);
   if (hasBegin && hasEnd) {
-    const re = new RegExp(`${escapeRe(BLOCK_BEGIN)}[\\s\\S]*?${escapeRe(BLOCK_END)}`);
+    const re = new RegExp(`${escapeRe(begin)}[\\s\\S]*?${escapeRe(end)}`);
     return { content: policyText.replace(re, () => block.trim()), action: "replaced" };
   }
   const body = policyText.trimEnd();
   const appended = (body ? body + "\n\n" : "") + block.trim() + "\n";
   return { content: appended, action: hasBegin || hasEnd ? "appended-broken" : "appended" };
+}
+
+// Remove a managed block (markers included). No-op unless BOTH markers exist —
+// same conservative stance as upsert on broken markers.
+export function removeManagedBlock(text, begin = BLOCK_BEGIN, end = BLOCK_END) {
+  if (!text.includes(begin) || !text.includes(end)) return { content: text, removed: false };
+  const re = new RegExp(`\\n?[ \\t]*${escapeRe(begin)}[\\s\\S]*?${escapeRe(end)}\\n?`);
+  const content = text.replace(re, "\n").replace(/\n{3,}/g, "\n\n");
+  return { content, removed: true };
 }
 
 // Build the full managed block for the selected tools.
