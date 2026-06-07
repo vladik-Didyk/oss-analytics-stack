@@ -23,7 +23,7 @@ import {
   getFrameworks,
   getFrameworkById,
 } from "../detect.js";
-import { patchPrivacyPolicy } from "../privacy.js";
+import { patchPrivacyPolicy, savePendingPrivacyNote } from "../privacy.js";
 
 export async function initCommand() {
   const cwd = process.cwd();
@@ -87,12 +87,15 @@ export async function initCommand() {
         initial: "src",
       },
       {
-        type: "toggle",
+        type: "select",
         name: "privacy",
         message: "Add analytics disclosures to your privacy policy?",
-        initial: true,
-        active: "yes",
-        inactive: "no",
+        choices: [
+          { title: "Yes", value: "yes" },
+          { title: "No", value: "no" },
+          { title: "I'm not sure — save a note for my AI assistant", value: "unsure" },
+        ],
+        initial: 0,
       },
       {
         type: "toggle",
@@ -122,8 +125,10 @@ export async function initCommand() {
   process.stdout.write(`  Tools:      ${[...tools].join(", ")}\n`);
   process.stdout.write(`  TypeScript: ${ts ? "yes" : "no"}\n`);
   process.stdout.write(`  Out dir:    ${c.cyan(outDir)}\n`);
-  if (answers.privacy) {
+  if (answers.privacy === "yes") {
     process.stdout.write(`  Privacy:    PRIVACY.md (create or update)\n`);
+  } else if (answers.privacy === "unsure") {
+    process.stdout.write(`  Privacy:    deferred (note saved for your AI assistant)\n`);
   }
   blank();
 
@@ -187,10 +192,18 @@ export async function initCommand() {
   patchGitignore(cwd);
 
   // 7. Privacy policy disclosures
-  if (answers.privacy) {
+  if (answers.privacy === "yes") {
     const privacyResult = patchPrivacyPolicy(cwd, tools);
     if (privacyResult) {
       step(privacyResult.created ? "Created" : "Updated", relPath(cwd, privacyResult.path));
+    }
+  } else if (answers.privacy === "unsure") {
+    blank();
+    info("No problem — skipping the privacy policy for now. In short: GA4, Clarity and");
+    info("PostHog expect you to tell visitors what data is collected. This tool can");
+    info("generate that text for you, without touching anything you wrote yourself.");
+    for (const notedPath of savePendingPrivacyNote(cwd, tools)) {
+      step("Saved", `${relPath(cwd, notedPath)} — note for your AI assistant`);
     }
   }
 
@@ -297,9 +310,14 @@ function printNextSteps(framework, tools, privacy) {
   );
   blank();
 
-  if (privacy) {
+  if (privacy === "yes") {
     process.stdout.write(
       `  ${c.bold(`${n++}.`)} Review ${c.cyan("PRIVACY.md")} — replace the ${c.cyan("[Your Company]")} placeholders and link it from your site footer.\n`
+    );
+    blank();
+  } else if (privacy === "unsure") {
+    process.stdout.write(
+      `  ${c.bold(`${n++}.`)} Decide on the privacy policy when ready: ${c.cyan("npx analytics-stack privacy")} ${c.dim("(your AI assistant has the context)")}\n`
     );
     blank();
   }
