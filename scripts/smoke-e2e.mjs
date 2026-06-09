@@ -15,6 +15,7 @@ if (!existsSync(join(REPO, "src", "commands", "init.js"))) {
 }
 
 const tmp = mkdtempSync(join(tmpdir(), "astack-smoke-"));
+let tmp2;
 
 writeFileSync(
   join(tmp, "package.json"),
@@ -34,7 +35,7 @@ try {
     ["ga4", "clarity"], // tools
     false,              // typescript
     "src",              // outDir
-    true,               // privacy
+    "yes",              // privacy
     false,              // installDeps
     true,               // confirm
   ]);
@@ -71,9 +72,38 @@ try {
   out = res.stdout + res.stderr;
   if (!out.includes("No privacy policy found")) fail("verify: missing-policy warning not shown");
 
-  console.log(`\n✨ smoke OK (${tmp})`);
+  // --- 5. init with "unsure" — no policy, note saved to AGENTS.md ---
+  tmp2 = mkdtempSync(join(tmpdir(), "astack-smoke-"));
+  writeFileSync(
+    join(tmp2, "package.json"),
+    JSON.stringify({ name: "smoke-app-2", dependencies: { vite: "^5.0.0", react: "^18.0.0" } }, null, 2)
+  );
+  process.chdir(tmp2);
+  prompts.inject([
+    "vite-react",  // framework
+    ["ga4"],       // tools
+    false,         // typescript
+    "src",         // outDir
+    "unsure",      // privacy
+    false,         // installDeps
+    true,          // confirm
+  ]);
+  await initCommand([]);
+  if (existsSync(join(tmp2, "PRIVACY.md"))) fail("unsure: PRIVACY.md should not be created");
+  const agentsMd = readFileSync(join(tmp2, "AGENTS.md"), "utf8");
+  if (!agentsMd.includes("analytics-stack:pending-privacy")) fail("unsure: AGENTS.md note missing");
+
+  // --- 6. privacy command generates the policy and clears the note ---
+  prompts.inject([["ga4"]]);
+  await privacyCommand([]);
+  if (!readFileSync(join(tmp2, "PRIVACY.md"), "utf8").includes("Google Analytics 4"))
+    fail("unsure: policy missing after privacy run");
+  if (existsSync(join(tmp2, "AGENTS.md"))) fail("unsure: note-only AGENTS.md should be deleted");
+
+  console.log(`\n✨ smoke OK (${tmp}, ${tmp2})`);
   rmSync(tmp, { recursive: true, force: true });
+  rmSync(tmp2, { recursive: true, force: true });
 } catch (err) {
-  console.error(`✖ SMOKE CRASH (dir kept: ${tmp})\n`, err);
+  console.error(`✖ SMOKE CRASH (dirs kept: ${tmp}${tmp2 ? `, ${tmp2}` : ""})\n`, err);
   process.exit(1);
 }
