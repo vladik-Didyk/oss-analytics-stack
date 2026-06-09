@@ -21,6 +21,23 @@ Two entry points, same engine:
   `.env.example`), pre-selects them, and updates only the policy file. Nothing
   else in your project is touched.
 
+## Not sure yet?
+
+Answering **"I'm not sure"** during `init` skips the policy step and saves a
+note for your AI assistant instead:
+
+- The note goes into every AI memory file your project already has
+  (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`). If none exist, `AGENTS.md` is
+  created.
+- It lives between `<!-- BEGIN analytics-stack:pending-privacy -->` markers —
+  the same managed-block contract as the policy itself, so your own notes in
+  those files are never touched.
+- The note asks the assistant to explain the disclosure requirement and offer
+  to run `npx analytics-stack privacy` with you.
+- As soon as disclosures are generated (by `init` or the `privacy` command),
+  the note is removed automatically. If `AGENTS.md` contained nothing but the
+  note, the file itself is deleted.
+
 ## What gets written
 
 The CLI looks for an existing policy file at the project root, in this order:

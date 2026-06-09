@@ -224,6 +224,11 @@ handles the boilerplate.
 (default: yes). If no policy exists, it creates `PRIVACY.md` from a skeleton
 with `[Your Company]` placeholders for you to fill in.
 
+Not sure yet? Pick **"I'm not sure"** and the CLI saves a short note into your
+project's AI memory file (`CLAUDE.md` / `AGENTS.md` / `GEMINI.md` — `AGENTS.md`
+is created if you have none), so your AI assistant can explain the decision and
+run it with you later. Generating the disclosures clears the note automatically.
+
 Already installed before this feature existed? Add the disclosures without
 touching any other file:
 

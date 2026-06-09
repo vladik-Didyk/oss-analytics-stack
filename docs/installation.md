@@ -15,7 +15,8 @@ The CLI will:
 3. Ask which analytics tools you want
 4. Ask if you want TypeScript
 5. Ask where to put the files (default `src/`)
-6. Ask whether to add analytics disclosures to your privacy policy (default yes)
+6. Ask whether to add analytics disclosures to your privacy policy (yes / no /
+   not sure — "not sure" saves a note for your AI assistant to explain later)
 
 You can hit Enter for every default if it auto-detected correctly.
 
